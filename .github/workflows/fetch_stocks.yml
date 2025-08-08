@@ -42,5 +42,5 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Add stock data for $(date -u +"%Y-%m-%d")"
-            git push origin HEAD
+            git push origin HEAD:${{ github.ref }}
           fi
