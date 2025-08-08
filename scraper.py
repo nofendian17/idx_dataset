@@ -34,6 +34,8 @@ def fetch_stock_data(date: str) -> Optional[List[Dict]]:
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         data = response.json()
+        if isinstance(data, dict) and 'data' in data and isinstance(data['data'], list):
+            return data['data']
         if isinstance(data, list):
             return data
         print("Unexpected API response format.")
@@ -44,7 +46,6 @@ def fetch_stock_data(date: str) -> Optional[List[Dict]]:
 
 def save_to_csv(date: str, data: List[Dict]) -> str:
     """Save stock data to CSV inside data/ folder."""
-    os.makedirs("data", exist_ok=True)
     filename = f"data/stock_data_{date}.csv"
     fieldnames = [
         'Date', 'Stock Code', 'Board', 
@@ -79,6 +80,7 @@ def main():
                         help='Trading date (format: YYYY-MM-DD), defaults to today in Asia/Jakarta')
     args = parser.parse_args()
 
+    os.makedirs("data", exist_ok=True)
     stock_data = fetch_stock_data(args.date)
     if stock_data:
         filename = save_to_csv(args.date, stock_data)
