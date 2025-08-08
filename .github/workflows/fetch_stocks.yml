@@ -2,8 +2,8 @@ name: Fetch Stock Data
 
 on:
   schedule:
-    # Runs every day at 11:00 UTC = 18:00 WIB (Jakarta)
-    - cron: "0 11 * * *"
+    # Runs every day from Monday to Friday at 11:00 UTC = 18:00 WIB (Jakarta)
+    - cron: "0 11 * * 1-5"
   workflow_dispatch: # Allow manual run
 
 permissions:

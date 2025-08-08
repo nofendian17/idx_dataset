@@ -53,7 +53,7 @@ The script will create a `data/` directory if it doesn't exist and save the data
 
 This repository is configured with a GitHub Actions workflow (`.github/workflows/fetch_stocks.yml`) that automates the data fetching process.
 
--   The workflow runs daily at 11:00 UTC (18:00 WIB).
+-   The workflow runs from Monday to Friday at 11:00 UTC (18:00 WIB).
 -   It executes the `scraper.py` script to get the latest stock data.
 -   The new CSV file is then automatically committed and pushed to the repository.
 -   The workflow can also be triggered manually from the Actions tab in the GitHub repository.
