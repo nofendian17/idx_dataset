@@ -2,6 +2,7 @@ import requests
 import csv
 import argparse
 import os
+import sys
 from typing import List, Dict, Optional
 from datetime import datetime, timedelta, timezone
 
@@ -87,6 +88,7 @@ def main():
         print(f"Successfully saved {len(stock_data)} records to {filename}")
     else:
         print("Failed to fetch or save stock data")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

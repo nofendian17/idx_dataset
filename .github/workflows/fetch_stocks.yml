@@ -36,12 +36,14 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          shopt -s nullglob
-          git add data/*.csv
-          
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
+          if [ -n "$(find data -name '*.csv')" ]; then
+            git add data/*.csv
+            if git diff --cached --quiet; then
+              echo "No changes to commit"
+            else
+              git commit -m "Add stock data for $(date -u +"%Y-%m-%d")"
+              git push origin HEAD:${{ github.ref }}
+            fi
           else
-            git commit -m "Add stock data for $(date -u +"%Y-%m-%d")"
-            git push origin HEAD:${{ github.ref }}
+            echo "No new CSV files to commit"
           fi
