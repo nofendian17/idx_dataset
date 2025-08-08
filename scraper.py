@@ -83,12 +83,17 @@ def main():
 
     os.makedirs("data", exist_ok=True)
     stock_data = fetch_stock_data(args.date)
-    if stock_data:
-        filename = save_to_csv(args.date, stock_data)
-        print(f"Successfully saved {len(stock_data)} records to {filename}")
-    else:
-        print("Failed to fetch or save stock data")
+
+    if stock_data is None:
+        print("Failed to fetch stock data, API request failed.")
         sys.exit(1)
+    
+    if not stock_data:
+        print(f"No stock data available for {args.date}. It might be a weekend or holiday.")
+        sys.exit(0)
+
+    filename = save_to_csv(args.date, stock_data)
+    print(f"Successfully saved {len(stock_data)} records to {filename}")
 
 if __name__ == "__main__":
     main()
