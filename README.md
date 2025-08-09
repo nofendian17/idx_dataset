@@ -58,6 +58,53 @@ This repository is configured with a GitHub Actions workflow (`.github/workflows
 -   The new CSV file is then automatically committed and pushed to the repository.
 -   The workflow can also be triggered manually from the Actions tab in the GitHub repository.
 
+## Bulk Data Fetching
+
+This project includes a `bulk_fetcher.py` script that allows you to download historical stock data for a specified date range in parallel. This is useful for populating the dataset over a longer period.
+
+### Running the Bulk Fetcher
+
+You can run the bulk fetcher with optional start and end dates, and specify the number of worker threads to use.
+
+-   **To fetch data for a date range (defaults to last 3 years):**
+    ```bash
+    python bulk_fetcher.py --start_date YYYY-MM-DD --end_date YYYY-MM-DD --max_workers N
+    ```
+    For example, to fetch data for January 2024 with 10 workers:
+    ```bash
+    python bulk_fetcher.py --start_date 2024-01-01 --end_date 2024-01-31 --max_workers 10
+    ```
+
+## Data Analysis
+
+The `stock_analyzer.py` script performs in-depth technical analysis on the collected stock data. It calculates various indicators, identifies trends, market phases, and generates trading signals.
+
+### Running the Analyzer
+
+To perform analysis on the data in the `data/` directory, simply run:
+```bash
+python stock_analyzer.py
+```
+The script will output the latest analysis results for each stock.
+
+## Interactive Dashboard
+
+A Streamlit application (`streamlit_app.py`) is provided to visualize the stock data and analysis results. It offers an interactive dashboard with the following pages:
+
+-   **Daily Market Summary:** Overview of market performance.
+-   **Stock Trend Analysis:** Detailed trend analysis for individual stocks.
+-   **Strategy Analysis:** Evaluation of trading strategies.
+-   **Price Prediction:** Potential price forecasting (if implemented).
+-   **Comprehensive Trend Analysis:** In-depth trend insights.
+
+### Running the Dashboard
+
+To launch the dashboard, ensure you have Streamlit installed (`pip install streamlit`) and then run:
+```bash
+streamlit run streamlit_app.py
+```
+This will open the dashboard in your web browser.
+
 ## Data Format
 
 The output CSV file has the following columns:
