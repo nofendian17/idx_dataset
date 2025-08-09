@@ -16,6 +16,26 @@ MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
 DATA_DIR = "data"
 
+# CSV Field Names
+CSV_FIELDNAMES = [
+    'Date', 'Stock Code', 'Board', 'Previous Price', 'Last Price',
+    'Open Price', 'High Price', 'Low Price', 'Volume', 'Value'
+]
+
+# API Field Mapping
+API_FIELD_MAPPING = {
+    'date': 'Date',
+    'list_stock_code': 'Stock Code',
+    'board': 'Board',
+    'previous': 'Previous Price',
+    'last': 'Last Price',
+    'open': 'Open Price',
+    'high': 'High Price',
+    'low': 'Low Price',
+    'tot_volume': 'Volume',
+    'tot_value': 'Value'
+}
+
 # --- Logging Setup ---
 logging.basicConfig(
     level=logging.INFO,
@@ -88,34 +108,27 @@ def save_to_csv(date: str, data: List[Dict[str, Any]]) -> str:
     os.makedirs(DATA_DIR, exist_ok=True)
     filename = os.path.join(DATA_DIR, f"stock_data_{date}.csv")
 
-    fieldnames = [
-        'Date', 'Stock Code', 'Board', 'Previous Price', 'Last Price',
-        'Open Price', 'High Price', 'Low Price', 'Volume', 'Value'
-    ]
-    
     try:
         with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer = csv.DictWriter(csvfile, fieldnames=CSV_FIELDNAMES)
             writer.writeheader()
 
             for stock in data:
-                writer.writerow({
-                    'Date': stock.get('date', date),
-                    'Stock Code': stock.get('list_stock_code', 'N/A'),
-                    'Board': stock.get('board', 'N/A'),
-                    'Previous Price': stock.get('previous', 0),
-                    'Last Price': stock.get('last', 0),
-                    'Open Price': stock.get('open', 0),
-                    'High Price': stock.get('high', 0),
-                    'Low Price': stock.get('low', 0),
-                    'Volume': stock.get('tot_volume', 0),
-                    'Value': stock.get('tot_value', 0)
-                })
+                row_data = {}
+                for api_field, csv_field in API_FIELD_MAPPING.items():
+                    row_data[csv_field] = stock.get(api_field, 0 if csv_field in ['Previous Price', 'Last Price', 'Open Price', 'High Price', 'Low Price', 'Volume', 'Value'] else 'N/A')
+
+                # Special handling for date
+                if 'Date' in row_data:
+                    row_data['Date'] = stock.get('date', date)
+
+                writer.writerow(row_data)
+
         logging.info(f"Successfully saved {len(data)} records to {filename}")
     except IOError as e:
         logging.error(f"Could not write to file {filename}: {e}")
         raise
-    
+
     return filename
 
 def main():

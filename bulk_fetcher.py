@@ -1,7 +1,8 @@
 import argparse
 import logging
 import sys
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
+from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Import the necessary functions from the refactored scraper

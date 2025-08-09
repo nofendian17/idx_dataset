@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import talib
 
+
 def sma_crossover_strategy(df, short_window=20, long_window=50):
     df['SMA_Short'] = talib.SMA(df['Close Price'], timeperiod=short_window)
     df['SMA_Long'] = talib.SMA(df['Close Price'], timeperiod=long_window)
@@ -24,7 +25,7 @@ def sma_rsi_strategy(df, short_window=20, long_window=50, rsi_period=14, rsi_buy
     df['RSI'] = talib.RSI(df['Close Price'], timeperiod=rsi_period)
     df['sma_signal'] = 0
     df.loc[long_window:, 'sma_signal'] = np.where(df['SMA_Short'][long_window:] > df['SMA_Long'][long_window:], 1, -1)
-    df['buy_signal'] = np.where((df['sma_signal'] == 1) & (df['sma_signal'].shift(1) == -1) & (df['RSI'] > rsi_buy_.threshold), df['Close Price'], np.nan)
+    df['buy_signal'] = np.where((df['sma_signal'] == 1) & (df['sma_signal'].shift(1) == -1) & (df['RSI'] > rsi_buy_threshold), df['Close Price'], np.nan)
     df['sell_signal'] = np.where((df['sma_signal'] == -1) & (df['sma_signal'].shift(1) == 1) & (df['RSI'] < rsi_sell_threshold), df['Close Price'], np.nan)
     return df
 
@@ -51,7 +52,7 @@ def swing_trading_strategy(df):
                 in_position = False
     return df
 
-def day_trading_ema_rsi_strategy(df, short_ema=9, long_ema=21, rsi_period=7, rsi_overbought=80, rsi_oversold=20):
+def day_trading_ema_rsi_strategy(df, short_ema=5, long_ema=20, rsi_period=7, rsi_overbought=80, rsi_oversold=20):
     df['EMA_Short'] = talib.EMA(df['Close Price'], timeperiod=short_ema)
     df['EMA_Long'] = talib.EMA(df['Close Price'], timeperiod=long_ema)
     df['RSI'] = talib.RSI(df['Close Price'], timeperiod=rsi_period)
@@ -61,17 +62,17 @@ def day_trading_ema_rsi_strategy(df, short_ema=9, long_ema=21, rsi_period=7, rsi
 
     position = 0
     for i in range(1, len(df)):
-        if df['EMA_Short'][i] > df['EMA_Long'][i] and df['EMA_Short'][i-1] <= df['EMA_Long'][i-1] and df['RSI'][i] < rsi_overbought:
+        if df['EMA_Short'][i] > df['EMA_Long'][i] and df['EMA_Short'][i-1] <= df['EMA_Long'][i-1] and df['RSI'][i] < rsi_oversold:
             if position != 1:
                 df.loc[i, 'buy_signal'] = df['Close Price'][i]
                 position = 1
-        elif df['EMA_Short'][i] < df['EMA_Long'][i] and df['EMA_Short'][i-1] >= df['EMA_Long'][i-1] and df['RSI'][i] > rsi_oversold:
+        elif df['EMA_Short'][i] < df['EMA_Long'][i] and df['EMA_Short'][i-1] >= df['EMA_Long'][i-1] and df['RSI'][i] > rsi_overbought:
             if position == 1:
                 df.loc[i, 'sell_signal'] = df['Close Price'][i]
                 position = 0
     return df
 
-def ema_rsi_tp_sl_strategy(df, short_ema=5, long_ema=9, rsi_period=7, rsi_threshold=50, take_profit_pct=0.03, stop_loss_pct=0.02):
+def ema_rsi_tp_sl_strategy(df, short_ema=5, long_ema=20, rsi_period=7, rsi_threshold=50, take_profit_pct=0.03, stop_loss_pct=0.02):
     df['EMA_Short'] = talib.EMA(df['Close Price'], timeperiod=short_ema)
     df['EMA_Long'] = talib.EMA(df['Close Price'], timeperiod=long_ema)
     df['RSI'] = talib.RSI(df['Close Price'], timeperiod=rsi_period)
@@ -143,5 +144,53 @@ def day_trading_strategy_user(df, short_ema_period=5, long_ema_period=20, rsi_pe
                 df.loc[i, 'sell_signal'] = current_price
                 in_position = False
                 buy_price = 0
+
+    return df
+
+def support_resistance_strategy(df, lookback=20, volume_threshold=1.5):
+    """
+    Support and Resistance based trading strategy.
+
+    Args:
+        df: DataFrame with price and volume data
+        lookback: Number of periods to look back for support/resistance
+        volume_threshold: Volume multiplier for confirmation (e.g., 1.5 = 50% above average)
+
+    Returns:
+        DataFrame with buy/sell signals
+    """
+    # Calculate rolling average volume for confirmation
+    df['Avg_Volume'] = df['Volume'].rolling(window=lookback).mean()
+
+    # Initialize signals
+    df['buy_signal'] = np.nan
+    df['sell_signal'] = np.nan
+    df['support'] = np.nan
+    df['resistance'] = np.nan
+
+    # Find support and resistance levels
+    for i in range(lookback, len(df)):
+        # Get recent price data
+        recent_prices = df['Close Price'].iloc[i-lookback:i]
+        recent_low = recent_prices.min()
+        recent_high = recent_prices.max()
+
+        current_price = df['Close Price'][i]
+        current_volume = df['Volume'][i]
+        avg_volume = df['Avg_Volume'][i]
+
+        # Support level (price bounces from recent low)
+        # Detect if price is at or slightly below the recent low with high volume
+        if (current_price <= recent_low * (1 + 0.005) and  # Price is at or slightly above the recent low
+            current_volume > avg_volume * volume_threshold):  # Volume confirmation
+            df.loc[i, 'support'] = recent_low
+            df.loc[i, 'buy_signal'] = current_price
+
+        # Resistance level (price reverses from recent high)
+        # Detect if price is at or slightly above the recent high with high volume
+        elif (current_price >= recent_high * (1 - 0.005) and  # Price is at or slightly below the recent high
+              current_volume > avg_volume * volume_threshold):  # Volume confirmation
+            df.loc[i, 'resistance'] = recent_high
+            df.loc[i, 'sell_signal'] = current_price
 
     return df
